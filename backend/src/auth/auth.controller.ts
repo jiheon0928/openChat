@@ -1,8 +1,15 @@
-import { Body, Controller, Post, BadRequestException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  BadRequestException,
+  Res,
+} from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './DTO/register.dto';
 import { LoginDto } from './DTO/login.dto';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -42,12 +49,26 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(@Body() body: LoginDto) {
+  async login(@Body() body: LoginDto, @Res() res: Response) {
     const { email, password } = body;
-    const token = await this.authService.login(email, password);
-    return {
+    const { accessToken, nickname, id } = await this.authService.login(
+      email,
+      password,
+    );
+
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 3600 * 1000,
+    });
+
+    return res.status(200).json({
       message: '로그인 성공',
-      result: token,
-    };
+      result: {
+        nickname,
+        id,
+      },
+    });
   }
 }

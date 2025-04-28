@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation"; // ✅ App Router용
+import { useRouter } from "next/navigation";
 import axios from "axios";
 
-const API_URL = "http://localhost:3001"; // 백엔드 주소
+const API_URL = "http://localhost:3001";
 
 const Page = () => {
-  const router = useRouter(); // ✅ 훅은 컴포넌트 최상단에서 호출
+  const router = useRouter();
 
   const [formData, setFormData] = useState({
     nickname: "",
@@ -51,7 +51,7 @@ const Page = () => {
     } catch (err: any) {
       console.error("회원가입 에러:", err);
       const message = err.response?.data?.message || "회원가입에 실패했습니다.";
-      alert(message); // ✅ 백엔드에서 온 에러 메시지 그대로 alert
+      alert(message);
     }
   };
 
@@ -93,8 +93,7 @@ const Page = () => {
         />
         <button
           type="submit"
-          className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600"
-        >
+          className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
           회원가입
         </button>
       </form>

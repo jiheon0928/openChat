@@ -14,7 +14,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className="bg-gray-100 min-h-screen">
-        <Header /> {/* 이걸 추가해야 헤더 적용돼! */}
+        <Header />
         <main className="max-w-4xl mx-auto px-4 py-8">{children}</main>
       </body>
     </html>

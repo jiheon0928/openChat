@@ -33,17 +33,20 @@ const Page = () => {
     }
 
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
-        email,
-        password,
-      });
+      const response = await axios.post(
+        `${API_URL}/auth/login`,
+        { email, password },
+        { withCredentials: true }
+      );
 
-      const token = response.data.data.accessToken;
-      localStorage.setItem("accessToken", token);
+      const nickname = response.data.result.nickname;
+      const id = response.data.result.id;
 
+      localStorage.setItem("nickname", nickname);
+      localStorage.setItem("userId", id);
       alert("로그인에 성공했습니다!");
-      // 로그인 성공 시 로컬스토리지, 쿠키 저장 등 가능
-      router.push("/"); // 홈으로 이동
+
+      router.push("/chat");
     } catch (err: any) {
       console.error("로그인 에러:", err);
       const message = err.response?.data?.message || "로그인에 실패했습니다.";
@@ -73,8 +76,7 @@ const Page = () => {
         />
         <button
           type="submit"
-          className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600"
-        >
+          className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
           로그인
         </button>
       </form>
