@@ -20,13 +20,15 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
+  // ↓ 이렇게 바꿔주세요 ↓
+  const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: FRONTEND_URL.split(','), // 여러개일 땐 콤마로 구분
     credentials: true,
   });
 
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  await app.listen(3000);
+  await app.listen(process.env.PORT || 3000);
 }
 bootstrap();
