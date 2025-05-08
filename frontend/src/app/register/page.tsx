@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 const API_URL = "http://localhost:3001";
 
@@ -47,11 +47,13 @@ const Page = () => {
       });
 
       alert("회원가입이 완료되었습니다!");
-      await router.push("/login"); // ✅ 페이지 이동
-    } catch (err: any) {
-      console.error("회원가입 에러:", err);
-      const message = err.response?.data?.message || "회원가입에 실패했습니다.";
+      await router.push("/login");
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      const message =
+        error.response?.data?.message || "회원가입에 실패했습니다.";
       alert(message);
+      console.error("회원가입 에러:", error);
     }
   };
 
@@ -93,7 +95,8 @@ const Page = () => {
         />
         <button
           type="submit"
-          className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
+          className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600"
+        >
           회원가입
         </button>
       </form>
