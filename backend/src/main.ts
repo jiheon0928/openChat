@@ -1,14 +1,30 @@
-import * as nodeCrypto from 'crypto';
-(global as any).crypto = nodeCrypto;
-
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
+import * as cors from 'cors';
+
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { TransformInterceptor } from './common/interceptors/tranfrom.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // CORS: Vercel 배포 도메인만 허용
+  app.use(
+    cors({
+      origin: ['https://open-chat-sandy.vercel.app', 'http://localhost:3000'],
+      credentials: true,
+      methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'Accept',
+      ],
+      optionsSuccessStatus: 204,
+    }),
+  );
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -19,14 +35,6 @@ async function bootstrap() {
   );
 
   app.use(cookieParser());
-
-  // CORS: 모든 Origin, 메서드, 헤더, 자격증명 허용
-  app.enableCors({
-    origin: true, // 요청한 모든 Origin 허용
-    credentials: true, // 쿠키/인증 헤더 허용
-    methods: '*', // 모든 HTTP 메서드 허용
-    allowedHeaders: '*', // 모든 헤더 허용
-  });
 
   app.useGlobalInterceptors(new TransformInterceptor());
 

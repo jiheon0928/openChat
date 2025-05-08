@@ -4,9 +4,8 @@ services:
     image: mysql:8.0
     restart: always
     ports:
-      - '${DB_PORT}:3306' # 호스트(DB_PORT) ↔ 컨테이너(3306)
+      - '3306:3306' # MySQL 포트는 내부용으로만 사용
     environment:
-      # root 비밀번호만 설정
       MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
       MYSQL_DATABASE: '${DB_DATABASE}'
     volumes:
@@ -20,15 +19,16 @@ services:
 
   app:
     build:
-      context: . # 이 디렉토리(backend)의 Dockerfile 사용
+      context: .
       dockerfile: Dockerfile
     restart: always
     ports:
-      - '3031:3000'
+      - '3031:3000' # 외부 접속용 포트
     env_file:
-      - .env # DB_HOST 등 환경변수 로드
+      - .env
     environment:
-      DB_HOST: db # 컨테이너 네트워크 상의 DB 서비스명
+      DB_HOST: db
+      NODE_ENV: production
     depends_on:
       db:
         condition: service_healthy
