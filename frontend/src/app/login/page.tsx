@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 const API_URL = "http://localhost:3001";
 
@@ -47,10 +47,15 @@ const Page = () => {
       alert("로그인에 성공했습니다!");
 
       router.push("/chat");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      // 타입 가드 사용
+      if (axios.isAxiosError(err)) {
+        const message = err.response?.data?.message || "로그인에 실패했습니다.";
+        alert(message);
+      } else {
+        alert("알 수 없는 에러가 발생했습니다.");
+      }
       console.error("로그인 에러:", err);
-      const message = err.response?.data?.message || "로그인에 실패했습니다.";
-      alert(message);
     }
   };
 
@@ -76,7 +81,8 @@ const Page = () => {
         />
         <button
           type="submit"
-          className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
+          className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600"
+        >
           로그인
         </button>
       </form>
