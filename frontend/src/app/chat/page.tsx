@@ -16,12 +16,12 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const chatContainerRef = useRef<HTMLDivElement>(null); // ⭐ 스크롤용 ref 추가
-
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   useEffect(() => {
     const fetchMessages = async () => {
       try {
         const { data } = await axios.get<{ data: ChatMessage[] }>(
-          "http://localhost:3001/chat/messages",
+          `${API_URL}/chat/messages`,
           { withCredentials: true }
         );
 
