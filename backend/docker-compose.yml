@@ -1,21 +1,19 @@
 # docker‑compose.yml
-version: "3.8"
-
 services:
   db:
     image: mysql:8.0
     restart: always
     ports:
-      - "${DB_PORT}:3306" # 호스트(DB_PORT) ↔ 컨테이너(3306)
+      - '${DB_PORT}:3306' # 호스트(DB_PORT) ↔ 컨테이너(3306)
     environment:
-      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
-      MYSQL_DATABASE: "${DB_DATABASE}"
-      MYSQL_USER: "${DB_USERNAME}"
-      MYSQL_PASSWORD: "${DB_PASSWORD}"
+      # root 비밀번호만 설정
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_DATABASE: '${DB_DATABASE}'
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test:
+        ['CMD-SHELL', 'mysqladmin ping -h localhost -p"${MYSQL_ROOT_PASSWORD}"']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,7 +24,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "3000:3000" # 호스트 3000 ↔ 컨테이너 3000
+      - '3031:3000'
     env_file:
       - .env # DB_HOST 등 환경변수 로드
     environment:
@@ -35,7 +33,7 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
       interval: 5s
       timeout: 3s
       retries: 5

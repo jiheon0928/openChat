@@ -1,3 +1,6 @@
+import * as nodeCrypto from 'crypto';
+(global as any).crypto = nodeCrypto;
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -24,6 +27,6 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  await app.listen(3001);
+  await app.listen(3000);
 }
 bootstrap();
