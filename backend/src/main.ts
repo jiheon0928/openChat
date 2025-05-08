@@ -4,9 +4,8 @@ import * as nodeCrypto from 'crypto';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-
 import * as cookieParser from 'cookie-parser';
-import { TransformInterceptor } from './common/interceptors/tranfrom.intercoptor';
+import { TransformInterceptor } from './common/interceptors/tranfrom.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,8 +20,13 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-  app.enableCors({ origin: true, credentials: true });
+  // CORS: 모든 Origin, 메서드, 헤더, 자격증명 허용
+  app.enableCors({
+    origin: true, // 요청한 모든 Origin 허용
+    credentials: true, // 쿠키/인증 헤더 허용
+    methods: '*', // 모든 HTTP 메서드 허용
+    allowedHeaders: '*', // 모든 헤더 허용
+  });
 
   app.useGlobalInterceptors(new TransformInterceptor());
 
