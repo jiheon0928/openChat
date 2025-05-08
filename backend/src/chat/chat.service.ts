@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
-import { User } from 'src/user/user.entity';
 import { ChatMessage } from './chatMessage.entity';
+import { User } from 'src/user/user.entity';
 
 @Injectable()
 export class ChatService {
@@ -15,11 +14,24 @@ export class ChatService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  /**
-   * 메세지 저장
-   * @param userId
-   * @param content 메세지 내용
-   */
+  // ✅ 과거 메세지 가져오기
+  async findAll(): Promise<any[]> {
+    const messages = await this.chatMessageRepository.find({
+      relations: ['sender'],
+      order: { createdAt: 'ASC' },
+      take: 50,
+    });
+
+    return messages.map((message) => ({
+      id: message.id,
+      senderId: message.sender.id,
+      nickname: message.sender.nickname,
+      content: message.content,
+      createdAt: message.createdAt,
+    }));
+  }
+
+  // ✅ 새 메세지 저장하기
   async saveMessage(userId: number, content: string): Promise<ChatMessage> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
@@ -34,14 +46,6 @@ export class ChatService {
       content,
     });
 
-    return this.chatMessageRepository.save(message);
-  }
-
-  async getRecentMessages(limit = 50): Promise<ChatMessage[]> {
-    return this.chatMessageRepository.find({
-      relations: ['sender'],
-      order: { createdAt: 'DESC' },
-      take: limit,
-    });
+    return await this.chatMessageRepository.save(message);
   }
 }
