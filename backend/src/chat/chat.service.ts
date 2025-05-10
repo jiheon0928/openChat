@@ -14,7 +14,6 @@ export class ChatService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  // ✅ 과거 메세지 가져오기
   async findAll(): Promise<any[]> {
     const messages = await this.chatMessageRepository.find({
       relations: ['sender'],
