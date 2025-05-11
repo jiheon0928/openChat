@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
@@ -8,6 +8,11 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 const Page = () => {
   const router = useRouter();
+
+  // 여기에 추가!
+  useEffect(() => {
+    console.log("▶️ API_URL is:", API_URL);
+  }, []);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -48,7 +53,6 @@ const Page = () => {
 
       router.push("/chat");
     } catch (err: unknown) {
-      // 타입 가드 사용
       if (axios.isAxiosError(err)) {
         const message = err.response?.data?.message || "로그인에 실패했습니다.";
         alert(message);
