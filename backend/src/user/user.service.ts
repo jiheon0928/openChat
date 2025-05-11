@@ -1,38 +1,62 @@
-// src/user/user.service.ts
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './user.entity';
-import { Repository } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
+// src/main.ts
 
-@Injectable()
-export class UserService {
-  constructor(
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
-  ) {}
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+import * as cookieParser from 'cookie-parser';
+import * as cors from 'cors';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { TransformInterceptor } from './common/interceptors/tranfrom.interceptor';
 
-  async createUser(
-    email: string,
-    password: string,
-    nickname: string,
-  ): Promise<User> {
-    const hashedPassword = await bcrypt.hash(password, 10);
+async function bootstrap() {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-    const newUser = this.userRepo.create({
-      email,
-      password: hashedPassword,
-      nickname,
-    });
+  // 1) CORS 허용 origin 환경변수 (도커: CORS_ORIGIN, Vercel: CLIENT_ORIGIN) 읽기
+  const rawOrigins = process.env.CORS_ORIGIN ?? process.env.CLIENT_ORIGIN;
+  const allowedOrigins = rawOrigins
+    ? rawOrigins.split(',').map((o) => o.trim())
+    : [
+        'http://localhost:3000',
+        'https://open-chat-sandy.vercel.app',
+      ];
 
-    return this.userRepo.save(newUser);
-  }
+  console.log('🔐 Allowed CORS origins:', allowedOrigins);
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userRepo.findOne({ where: { email } });
-  }
+  // 2) CORS 설정
+  app.use(
+    cors({
+      origin: allowedOrigins,
+      credentials: true,
+      methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'Accept',
+      ],
+      optionsSuccessStatus: 204,
+    }),
+  );
 
-  async findByNickname(nickname: string): Promise<User | null> {
-    return this.userRepo.findOne({ where: { nickname } });
-  }
+  // 3) 전역 유효성 검사 파이프
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
+  // 4) 쿠키 파서
+  app.use(cookieParser());
+
+  // 5) 응답 포맷 인터셉터
+  app.useGlobalInterceptors(new TransformInterceptor());
+
+  // 6) 0.0.0.0 바인딩 + 포트
+  const port = parseInt(process.env.PORT, 10) || 3000;
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 Server running on http://0.0.0.0:${port}`);
 }
+
+bootstrap();
