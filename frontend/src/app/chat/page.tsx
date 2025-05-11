@@ -16,7 +16,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+  const API_URL = import.meta.env.VITE_API_URL;
   useEffect(() => {
     const fetchMessages = async () => {
       try {
@@ -87,8 +87,7 @@ export default function ChatPage() {
     <div className="p-4">
       <div
         ref={chatContainerRef}
-        className="flex flex-col gap-2 mb-4 max-h-[500px] overflow-y-auto border p-4 rounded"
-      >
+        className="flex flex-col gap-2 mb-4 max-h-[500px] overflow-y-auto border p-4 rounded">
         {messages.map((msg) => {
           const myUserId = Number(localStorage.getItem("userId"));
           const isMyMessage = msg.senderId === myUserId;
@@ -98,15 +97,13 @@ export default function ChatPage() {
               key={`${msg.id}-${msg.createdAt}`}
               className={`flex ${
                 isMyMessage ? "justify-end" : "justify-start"
-              }`}
-            >
+              }`}>
               <div
                 className={`p-2 rounded-lg max-w-xs break-words ${
                   isMyMessage
                     ? "bg-black text-white rounded-br-none"
                     : "bg-gray-300 text-black rounded-bl-none"
-                }`}
-              >
+                }`}>
                 <div className="text-sm font-semibold mb-1">
                   {isMyMessage ? "나" : msg.nickname}
                 </div>
@@ -129,8 +126,7 @@ export default function ChatPage() {
         />
         <button
           className="bg-gray-500 text-white p-2 rounded hover:bg-gray-600"
-          onClick={handleSend}
-        >
+          onClick={handleSend}>
           보내기
         </button>
       </div>

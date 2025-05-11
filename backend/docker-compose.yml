@@ -1,42 +1,17 @@
-# docker‑compose.yml
+# backend/docker-compose.yml
+version: '3.8'
+
 services:
-  db:
-    image: mysql:8.0
-    restart: always
-    ports:
-      - '3306:3306' # MySQL 포트는 내부용으로만 사용
-    environment:
-      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
-      MYSQL_DATABASE: '${DB_DATABASE}'
-    volumes:
-      - db_data:/var/lib/mysql
-    healthcheck:
-      test:
-        ['CMD-SHELL', 'mysqladmin ping -h localhost -p"${MYSQL_ROOT_PASSWORD}"']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: always
+    build: .
+    container_name: nest-app
     ports:
-      - '3031:3000' # 외부 접속용 포트
-    env_file:
-      - .env
+      - '3000:3000'
     environment:
-      DB_HOST: db
-      NODE_ENV: production
-    depends_on:
-      db:
-        condition: service_healthy
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-volumes:
-  db_data:
+      - DB_HOST=chat-db.c09w0ei8ggyp.us-east-1.rds.amazonaws.com
+      - DB_PORT=3306
+      - DB_USERNAME=jiheon
+      - DB_PASSWORD=AA123456789
+      - DB_DATABASE=chat_db
+      - PORT=3000
+      - CORS_ORIGIN=https://open-chat-sandy.vercel.app
