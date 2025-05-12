@@ -38,11 +38,12 @@ const Page = () => {
         { withCredentials: true }
       );
 
-      const nickname = response.data.data.nickname;
-      const id = response.data.data.id;
+      const nickname = response.data.result.nickname;
+      const id = response.data.result.id;
 
       localStorage.setItem("nickname", nickname);
       localStorage.setItem("userId", id.toString());
+      console.log("로그인 응답:", response.data);
       alert("로그인에 성공했습니다!");
       router.push("/chat");
     } catch (err: unknown) {
