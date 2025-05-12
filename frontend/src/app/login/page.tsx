@@ -38,8 +38,8 @@ const Page = () => {
         { withCredentials: true }
       );
 
-      const nickname = response.data.result.nickname;
-      const id = response.data.result.id;
+      const nickname = response.data.nickname;
+      const id = response.data.id;
 
       localStorage.setItem("nickname", nickname);
       localStorage.setItem("userId", id.toString());
