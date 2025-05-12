@@ -21,8 +21,13 @@ async function bootstrap() {
     cors({
       origin: allowedOrigins,
       credentials: true,
-      methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
-      allowedHeaders: ['Content-Type','Authorization','X-Requested-With','Accept'],
+      methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'Accept',
+      ],
       optionsSuccessStatus: 204,
     }),
   );
@@ -43,7 +48,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor());
 
   // 0.0.0.0 바인딩으로 외부에서 접근 가능하도록 설정
-  const port = parseInt(process.env.PORT, 10) || 3000;
+  const port = (process.env.PORT, 10) || 3000;
   await app.listen(port, '0.0.0.0');
   console.log(`🚀 Server running on http://0.0.0.0:${port}`);
 }

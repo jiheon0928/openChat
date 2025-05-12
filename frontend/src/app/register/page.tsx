@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios, { AxiosError } from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+const API_URL = import.meta.env.VITE_API_URL!;
 
 const Page = () => {
   const router = useRouter();
@@ -95,7 +95,8 @@ const Page = () => {
         />
         <button
           type="submit"
-          className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
+          className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600"
+        >
           회원가입
         </button>
       </form>
