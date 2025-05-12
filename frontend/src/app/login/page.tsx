@@ -41,6 +41,12 @@ const Page = () => {
       const nickname = response.data.nickname;
       const id = response.data.id;
 
+      if (!nickname || !id) {
+        alert("로그인 응답에 문제가 있습니다.");
+        console.error("로그인 응답:", response.data);
+        return;
+      }
+
       localStorage.setItem("nickname", nickname);
       localStorage.setItem("userId", id.toString());
       console.log("로그인 응답:", response.data);
