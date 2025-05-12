@@ -31,15 +31,15 @@ const Page = () => {
     }
 
     try {
-      // API_URL 대신 상대경로로 호출
       const response = await axios.post(
         `/api/auth/login`,
         { email, password },
         { withCredentials: true }
       );
 
-      const nickname = response.data.nickname;
-      const id = response.data.id;
+      const user = response.data.data.data;
+      const nickname = user.nickname;
+      const id = user.id;
 
       if (!nickname || !id) {
         alert("로그인 응답에 문제가 있습니다.");
