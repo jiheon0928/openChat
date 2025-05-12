@@ -16,14 +16,13 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  // pages 또는 app 폴더 어디에서든
-  const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
   useEffect(() => {
     const fetchMessages = async () => {
       try {
+        // 상대경로로만 호출
         const { data } = await axios.get<{ data: ChatMessage[] }>(
-          `${API_URL}/chat/messages`,
+          `/api/chat/messages`,
           { withCredentials: true }
         );
 
@@ -33,7 +32,7 @@ export default function ChatPage() {
           console.error("서버 응답 형식이 올바르지 않습니다.", data);
         }
       } catch (error) {
-        console.error("메세지 불러오기 실패:", error);
+        console.error("메시지 불러오기 실패:", error);
       }
     };
 
@@ -54,7 +53,7 @@ export default function ChatPage() {
     };
   }, []);
 
-  // ⭐ messages가 바뀔 때마다 스크롤을 맨 아래로 이동
+  // messages가 바뀔 때마다 스크롤을 맨 아래로 이동
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop =
@@ -70,9 +69,8 @@ export default function ChatPage() {
       alert("로그인이 필요합니다.");
       return;
     }
-
     if (!input.trim()) {
-      alert("메세지를 입력해주세요.");
+      alert("메시지를 입력해주세요.");
       return;
     }
 
@@ -127,7 +125,7 @@ export default function ChatPage() {
           className="border p-2 flex-1 rounded"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="메세지 입력..."
+          placeholder="메시지 입력..."
         />
         <button
           className="bg-gray-500 text-white p-2 rounded hover:bg-gray-600"

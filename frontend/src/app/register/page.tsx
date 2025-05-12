@@ -4,9 +4,6 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios, { AxiosError } from "axios";
 
-// pages 또는 app 폴더 어디에서든
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
-
 const Page = () => {
   const router = useRouter();
 
@@ -41,14 +38,15 @@ const Page = () => {
     }
 
     try {
-      await axios.post(`${API_URL}/auth/register`, {
-        nickname,
-        email,
-        password,
-      });
+      // 절대경로 대신 상대경로 사용
+      await axios.post(
+        `/api/auth/register`,
+        { nickname, email, password },
+        { withCredentials: true }
+      );
 
       alert("회원가입이 완료되었습니다!");
-      await router.push("/login");
+      router.push("/login");
     } catch (err: unknown) {
       const error = err as AxiosError<{ message: string }>;
       const message =

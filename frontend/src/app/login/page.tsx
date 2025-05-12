@@ -1,19 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
-// pages 또는 app 폴더 어디에서든
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
-
 const Page = () => {
   const router = useRouter();
-
-  // 여기에 추가!
-  useEffect(() => {
-    console.log("▶️ API_URL is:", API_URL);
-  }, []);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -39,8 +31,9 @@ const Page = () => {
     }
 
     try {
+      // API_URL 대신 상대경로로 호출
       const response = await axios.post(
-        `${API_URL}/auth/login`,
+        `/api/auth/login`,
         { email, password },
         { withCredentials: true }
       );
@@ -49,9 +42,8 @@ const Page = () => {
       const id = response.data.result.id;
 
       localStorage.setItem("nickname", nickname);
-      localStorage.setItem("userId", id);
+      localStorage.setItem("userId", id.toString());
       alert("로그인에 성공했습니다!");
-
       router.push("/chat");
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
