@@ -16,7 +16,9 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const API_URL = import.meta.env.VITE_API_URL!;
+  // pages 또는 app 폴더 어디에서든
+  const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+
   useEffect(() => {
     const fetchMessages = async () => {
       try {

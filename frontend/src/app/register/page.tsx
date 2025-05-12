@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios, { AxiosError } from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL!;
+// pages 또는 app 폴더 어디에서든
+const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 const Page = () => {
   const router = useRouter();
