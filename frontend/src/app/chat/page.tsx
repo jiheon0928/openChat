@@ -96,7 +96,7 @@ export default function ChatPage() {
         nickname,
         content: input,
       },
-      (response: any) => {
+      (response: { success: boolean; message?: string }) => {
         console.log("메시지 전송 응답:", response);
       }
     );

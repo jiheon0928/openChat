@@ -1,8 +1,9 @@
 // socket.ts
 import { io } from "socket.io-client";
 
-// 백엔드 서버 URL (3000 포트 사용)
-const SOCKET_URL = "http://localhost:3000";
+// 배포된 백엔드 서버 URL
+const SOCKET_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://api.chat-portfolio.com";
 
 const socket = io(SOCKET_URL, {
   withCredentials: true,
