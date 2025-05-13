@@ -4,7 +4,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
-import * as cors from 'cors';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { TransformInterceptor } from './common/interceptors/tranfrom.interceptor';
 import { IoAdapter } from '@nestjs/platform-socket.io';
@@ -20,6 +19,8 @@ async function bootstrap() {
   const defaultOrigins = [
     'http://localhost:3000',
     'https://open-chat-sandy.vercel.app',
+    'http://jiheonchat.duckdns.org:3000',
+    'https://jiheonchat.duckdns.org',
   ];
 
   // 3) rawOrigins 처리
@@ -30,21 +31,19 @@ async function bootstrap() {
 
   console.log('🔐 Allowed CORS origins:', allowedOrigins);
 
-  // 4) HTTP CORS 설정
-  app.use(
-    cors({
-      origin: allowedOrigins,
-      credentials: true,
-      methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-      allowedHeaders: [
-        'Content-Type',
-        'Authorization',
-        'X-Requested-With',
-        'Accept',
-      ],
-      optionsSuccessStatus: 204,
-    }),
-  );
+  // ✅ 4) Nest 방식의 CORS 설정만 사용
+  app.enableCors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+    ],
+    optionsSuccessStatus: 204,
+  });
 
   // 5) 글로벌 ValidationPipe
   app.useGlobalPipes(
@@ -61,7 +60,7 @@ async function bootstrap() {
   // 7) 응답 인터셉터
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  // 8) Socket.IO adapter 설정 (createIOServer 메서드 사용)
+  // 8) Socket.IO adapter 설정
   const ioAdapter = new IoAdapter(app);
   const httpServer = app.getHttpServer() as any;
   ioAdapter.createIOServer(httpServer, {

@@ -6,6 +6,7 @@ import axios, { AxiosError } from "axios";
 
 const Page = () => {
   const router = useRouter();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL!; // https://jiheonchat.duckdns.org
 
   const [formData, setFormData] = useState({
     nickname: "",
@@ -38,9 +39,8 @@ const Page = () => {
     }
 
     try {
-      // 절대경로 대신 상대경로 사용
       await axios.post(
-        `/api/auth/register`,
+        `${API_URL}/auth/register`,
         { nickname, email, password },
         { withCredentials: true }
       );

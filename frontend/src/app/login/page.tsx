@@ -7,6 +7,8 @@ import axios from "axios";
 const Page = () => {
   const router = useRouter();
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL!; // `https://jiheonchat.duckdns.org`
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -32,7 +34,7 @@ const Page = () => {
 
     try {
       const response = await axios.post(
-        `/api/auth/login`,
+        `${API_URL}/auth/login`,
         { email, password },
         { withCredentials: true }
       );
