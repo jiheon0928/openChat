@@ -2,8 +2,7 @@
 import { io } from "socket.io-client";
 
 // 배포된 백엔드 서버 URL
-const SOCKET_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://api.chat-portfolio.com";
+const SOCKET_URL = "http://34.225.172.232:3000";
 
 const socket = io(SOCKET_URL, {
   withCredentials: true,
