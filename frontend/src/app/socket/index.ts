@@ -23,12 +23,12 @@ interface ClientToServerEvents {
 let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 
 if (typeof window !== "undefined") {
-  const token = localStorage.getItem("accessToken");
-  socket = io(window.location.origin, {
+  const token = localStorage.getItem("token"); // accessToken → token
+  socket = io("/", {
+    // window.location.origin 대신 "/"
     path: "/api/socket.io",
     auth: { token },
     transports: ["websocket"],
-    withCredentials: false,
     reconnection: true,
     reconnectionAttempts: Infinity,
     reconnectionDelay: 1000,
@@ -37,7 +37,7 @@ if (typeof window !== "undefined") {
   });
 }
 
-// 서버사이드 렌더링 시 빈 객체로 대체
+// 서버 사이드 렌더링 시에도 타입 안정성 유지
 const safeSocket = (socket ?? {}) as Socket<
   ServerToClientEvents,
   ClientToServerEvents

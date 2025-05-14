@@ -4,6 +4,11 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios, { AxiosError } from "axios";
 
+// axios 인스턴스: Vercel rewrite를 통해 /api → EC2 백엔드로 프록시됩니다.
+const api = axios.create({
+  baseURL: "/api",
+});
+
 interface RegisterResponse {
   status: string;
   message: string;
@@ -16,8 +21,6 @@ interface ErrorResponse {
 
 const Page = () => {
   const router = useRouter();
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
-
   const [formData, setFormData] = useState({
     nickname: "",
     email: "",
@@ -46,12 +49,13 @@ const Page = () => {
 
     try {
       setLoading(true);
-      const res = await axios.post<RegisterResponse>(
-        `${API_BASE}/auth/register`,
-        { nickname, email, password }
-      );
+      const res = await api.post<RegisterResponse>("/auth/register", {
+        nickname,
+        email,
+        password,
+      });
 
-      alert(res.data.message); // 백엔드 메시지 표시
+      alert(res.data.message); // 백엔드에서 보내준 메시지 ("등록 성공" 등)
       router.push("/login");
     } catch (err: unknown) {
       const error = err as AxiosError<ErrorResponse>;

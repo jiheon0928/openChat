@@ -4,9 +4,13 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios, { AxiosError } from "axios";
 
+// axios 인스턴스 생성 (rewrites를 이용해 Vercel이 /api/*를 EC2로 프록시)
+const api = axios.create({
+  baseURL: "/api",
+});
+
 const Page = () => {
   const router = useRouter();
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
   const [formData, setFormData] = useState({
     email: "",
@@ -28,11 +32,11 @@ const Page = () => {
     }
 
     try {
-      const res = await axios.post<{
+      const res = await api.post<{
         status: string;
         message: string;
         token: string;
-      }>(`${API_BASE}/auth/login`, { email, password });
+      }>("/auth/login", { email, password });
 
       const { token } = res.data;
       if (!token) {

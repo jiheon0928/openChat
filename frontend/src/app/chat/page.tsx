@@ -16,8 +16,6 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const chatContainerRef = useRef<HTMLDivElement>(null);
-
-  // <-- 여기서 초기값 null 지정
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -29,32 +27,32 @@ export default function ChatPage() {
       return;
     }
 
-    // 메시지 fetch
-    (async () => {
-      try {
-        const res = await axios.get<{ data: ChatMessage[] }>(
-          `${process.env.NEXT_PUBLIC_API_URL}/chat/messages`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (Array.isArray(res.data.data)) setMessages(res.data.data);
-      } catch (e) {
-        console.error(e);
-      }
-    })();
+    // 1) 기존 메시지 불러오기 (Vercel rewrite로 /api/chat/messages → EC2)
+    axios
+      .get<{ data: ChatMessage[] }>("/api/chat/messages", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        if (Array.isArray(res.data.data)) {
+          setMessages(res.data.data);
+        }
+      })
+      .catch(console.error);
 
-    // socket 연결
-    const socket = io(process.env.NEXT_PUBLIC_WS_URL!, {
-      auth: { token },
+    // 2) 소켓 연결 (경로는 rewrite된 /api/socket.io)
+    const socket = io("/", {
+      path: "/api/socket.io",
       transports: ["websocket"],
+      auth: { token },
     });
     socketRef.current = socket;
 
     socket.on("receiveMessage", (newMessage: ChatMessage) => {
       setMessages((prev) => [...prev, newMessage]);
     });
-    socket.on("connect", () => console.log("socket connected"));
-    socket.on("disconnect", () => console.log("socket disconnected"));
-    socket.on("connect_error", (err) => console.error(err));
+    socket.on("connect", () => console.log("소켓 연결됨"));
+    socket.on("disconnect", () => console.log("소켓 해제됨"));
+    socket.on("connect_error", (err) => console.error("소켓 에러:", err));
 
     return () => {
       socket.off("receiveMessage");
@@ -62,7 +60,7 @@ export default function ChatPage() {
     };
   }, []);
 
-  // 새 메시지 오면 스크롤
+  // 새 메시지마다 스크롤 맨 아래
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop =
@@ -79,16 +77,17 @@ export default function ChatPage() {
       return;
     }
     if (!input.trim()) {
-      alert("메시지 입력해.");
+      alert("메시지를 입력해.");
       return;
     }
 
-    // null 체크!
     socketRef.current?.emit(
       "sendMessage",
       { userId: Number(userId), nickname, content: input },
       (res: { success: boolean; message?: string }) => {
-        if (!res.success) alert(res.message || "전송 실패");
+        if (!res.success) {
+          alert(res.message || "전송 실패");
+        }
       }
     );
 
