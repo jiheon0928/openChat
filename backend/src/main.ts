@@ -3,71 +3,33 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import * as cookieParser from 'cookie-parser';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { TransformInterceptor } from './common/interceptors/tranfrom.interceptor';
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import * as cors from 'cors';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // 1) CORS 허용 origin 환경변수 처리
-  const rawOrigins =
-    process.env.CORS_ORIGIN?.trim() ||
-    process.env.CLIENT_ORIGIN?.trim() ||
-    '';
-  const defaultOrigins = [
+  // 허용할 도메인 목록
+  const origins = [
     'http://localhost:3000',
     'https://open-chat-sandy.vercel.app',
-    'http://jiheonchat.duckdns.org:3000',
-    'https://jiheonchat.duckdns.org',
   ];
-  const allowedOrigins =
-    rawOrigins === ''
-      ? defaultOrigins
-      : rawOrigins.split(',').map((o) => o.trim());
 
-  console.log('🔐 Allowed CORS origins:', allowedOrigins);
-
-  // 2) Express용 CORS 미들웨어 + preflight 핸들러
-  const corsOptions = {
-    origin: (origin: string | undefined, callback: any) => {
-      // origin이 없으면 (postman 등) 허용, 아니면 리스트 체크
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-Requested-With',
-      'Accept',
-    ],
-    optionsSuccessStatus: 204,
-  };
-  app.use(cors(corsOptions));
-  app.options('*', cors(corsOptions)); // preflight
-
-  // 3) Nest 방식 CORS (중복돼도 OK)
+  // 1) CORS 설정: cookie 안 쓰니 credentials: false
   app.enableCors({
-    origin: allowedOrigins,
-    credentials: true,
+    origin: origins,
+    credentials: false,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
       'Content-Type',
-      'Authorization',
+      'Authorization', // Authorization 헤더 허용
       'X-Requested-With',
       'Accept',
     ],
-    optionsSuccessStatus: 204,
   });
 
-  // 4) ValidationPipe
+  // 2) DTO 유효성 검사
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -76,25 +38,22 @@ async function bootstrap() {
     }),
   );
 
-  // 5) Cookie parser
-  app.use(cookieParser());
-
-  // 6) Transform interceptor
+  // 3) 응답 변환 인터셉터
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  // 7) Socket.IO adapter
+  // 4) Socket.IO 설정: credentials false
   const ioAdapter = new IoAdapter(app);
-  const httpServer = app.getHttpServer() as any;
-  ioAdapter.createIOServer(httpServer, {
+  const server = app.getHttpServer() as any;
+  ioAdapter.createIOServer(server, {
     cors: {
-      origin: allowedOrigins,
+      origin: origins,
       methods: ['GET', 'POST'],
-      credentials: true,
+      credentials: false,
     },
   });
   app.useWebSocketAdapter(ioAdapter);
 
-  // 8) 포트 바인딩
+  // 5) 서버 시작
   const port = parseInt(process.env.PORT || '3000', 10);
   await app.listen(port, '0.0.0.0');
   console.log(`🚀 Server running on http://0.0.0.0:${port}`);

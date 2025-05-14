@@ -1,101 +1,74 @@
-// src/main.ts
+// src/socket.ts
 
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
-import { ValidationPipe } from "@nestjs/common";
-import * as cookieParser from "cookie-parser";
-import { NestExpressApplication } from "@nestjs/platform-express";
-import { TransformInterceptor } from "./common/interceptors/tranfrom.interceptor";
-import { IoAdapter } from "@nestjs/platform-socket.io";
-import * as cors from "cors";
+import { io, Socket } from "socket.io-client";
 
-async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
-
-  // 1) CORS 허용 origin 환경변수 처리
-  const rawOrigins =
-    process.env.CORS_ORIGIN?.trim() || process.env.CLIENT_ORIGIN?.trim() || "";
-  const defaultOrigins = [
-    "http://localhost:3000",
-    "https://open-chat-sandy.vercel.app",
-    "http://jiheonchat.duckdns.org:3000",
-    "https://jiheonchat.duckdns.org",
-  ];
-  const allowedOrigins =
-    rawOrigins === ""
-      ? defaultOrigins
-      : rawOrigins.split(",").map((o) => o.trim());
-
-  console.log("🔐 Allowed CORS origins:", allowedOrigins);
-
-  // 2) Express용 CORS 미들웨어 + preflight 핸들러
-  const corsOptions = {
-    origin: (origin: string | undefined, callback: any) => {
-      // origin이 없으면 (postman 등) 허용, 아니면 리스트 체크
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "Accept",
-    ],
-    optionsSuccessStatus: 204,
-  };
-  app.use(cors(corsOptions));
-  const expressApp = app.getHttpAdapter().getInstance();
-  expressApp.options("*", cors(corsOptions)); 
-  // 3) Nest 방식 CORS (중복돼도 OK)
-  app.enableCors({
-    origin: allowedOrigins,
-    credentials: true,
-    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "Accept",
-    ],
-    optionsSuccessStatus: 204,
-  });
-
-  // 4) ValidationPipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    })
-  );
-
-  // 5) Cookie parser
-  app.use(cookieParser());
-
-  // 6) Transform interceptor
-  app.useGlobalInterceptors(new TransformInterceptor());
-
-  // 7) Socket.IO adapter
-  const ioAdapter = new IoAdapter(app);
-  const httpServer = app.getHttpServer() as any;
-  ioAdapter.createIOServer(httpServer, {
-    cors: {
-      origin: allowedOrigins,
-      methods: ["GET", "POST"],
-      credentials: true,
-    },
-  });
-  app.useWebSocketAdapter(ioAdapter);
-
-  // 8) 포트 바인딩
-  const port = parseInt(process.env.PORT || "3000", 10);
-  await app.listen(port, "0.0.0.0");
-  console.log(`🚀 Server running on http://0.0.0.0:${port}`);
+interface ServerToClientEvents {
+  message: (msg: string) => void;
+  // 서버에서 받는 이벤트 타입들 추가
 }
 
-bootstrap();
+interface ClientToServerEvents {
+  sendMessage: (msg: string) => void;
+  // 클라이언트에서 보내는 이벤트 타입들 추가
+}
+
+let socket: Socket<ServerToClientEvents, ClientToServerEvents>;
+
+/**
+ * 소켓 생성 함수
+ */
+export function initSocket(): Socket<
+  ServerToClientEvents,
+  ClientToServerEvents
+> {
+  if (socket && socket.connected) {
+    return socket;
+  }
+
+  const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "http://localhost:3000";
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+
+  socket = io(WS_URL, {
+    auth: { token },
+    transports: ["websocket"],
+    withCredentials: false, // 쿠키 사용 안 함
+    path: "/socket.io", // 기본값이지만 명시해도 OK
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000,
+  });
+
+  // 연결 성공
+  socket.on("connect", () => {
+    console.log("[Socket] connected, id=", socket.id);
+  });
+
+  // 연결 실패
+  socket.on("connect_error", (err) => {
+    console.error("[Socket] connection error:", err);
+  });
+
+  // 끊어졌을 때
+  socket.on("disconnect", (reason) => {
+    console.warn("[Socket] disconnected:", reason);
+  });
+
+  // 서버에서 보내는 메시지 처리 (예시)
+  socket.on("message", (msg) => {
+    console.log("[Socket] message:", msg);
+  });
+
+  return socket;
+}
+
+/**
+ * 메시지 전송 예시
+ */
+export function sendMessage(msg: string) {
+  if (!socket) initSocket();
+  socket.emit("sendMessage", msg);
+}
