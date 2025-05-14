@@ -4,18 +4,27 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios, { AxiosError } from "axios";
 
-// axios 인스턴스 생성 (rewrites를 이용해 Vercel이 /api/*를 EC2로 프록시)
+// axios 인스턴스: Vercel rewrites로 /api → EC2 백엔드로 프록시
 const api = axios.create({
   baseURL: "/api",
 });
 
+interface LoginResponse {
+  statusCode: number;
+  message: string;
+  data: {
+    status: string;
+    message: string;
+    token: {
+      token: string;
+      user: { id: number; nickname: string };
+    };
+  };
+}
+
 const Page = () => {
   const router = useRouter();
-
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -25,27 +34,32 @@ const Page = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { email, password } = formData;
-
     if (!email || !password) {
       alert("이메일과 비밀번호를 모두 입력해.");
       return;
     }
 
     try {
-      const res = await api.post<{
-        status: string;
-        message: string;
-        token: string;
-      }>("/auth/login", { email, password });
+      const res = await api.post<LoginResponse>("/auth/login", {
+        email,
+        password,
+      });
+      console.log("로그인 응답 전체:", res.data);
 
-      const { token } = res.data;
-      if (!token) {
+      // 실제 토큰과 유저 정보 꺼내기
+      const jwt = res.data.data.token.token;
+      const { id, nickname } = res.data.data.token.user;
+
+      if (!jwt) {
         alert("로그인 응답에 토큰이 없어.");
-        console.error("응답 전체:", res.data);
         return;
       }
 
-      localStorage.setItem("token", token);
+      // 로컬스토리지에 저장
+      localStorage.setItem("token", jwt);
+      localStorage.setItem("userId", String(id));
+      localStorage.setItem("nickname", nickname);
+
       alert("로그인 성공!");
       router.push("/chat");
     } catch (err: unknown) {
