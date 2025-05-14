@@ -4,9 +4,19 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios, { AxiosError } from "axios";
 
+interface RegisterResponse {
+  status: string;
+  message: string;
+  data: unknown;
+}
+
+interface ErrorResponse {
+  message: string;
+}
+
 const Page = () => {
   const router = useRouter();
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL!; // Vercel 환경변수에 설정해두세요
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
 
   const [formData, setFormData] = useState({
     nickname: "",
@@ -18,10 +28,7 @@ const Page = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,28 +36,27 @@ const Page = () => {
     const { nickname, email, password, confirmPassword } = formData;
 
     if (!nickname || !email || !password || !confirmPassword) {
-      alert("모든 필드를 입력해주세요.");
+      alert("모든 필드를 입력해.");
       return;
     }
     if (password !== confirmPassword) {
-      alert("비밀번호가 일치하지 않습니다.");
+      alert("비밀번호가 일치하지 않아.");
       return;
     }
 
     try {
       setLoading(true);
-      const res = await axios.post<{
-        status: string;
-        message: string;
-        data: any;
-      }>(`${API_BASE}/auth/register`, { nickname, email, password });
-      alert(res.data.message); // 백엔드에서 보내준 "등록 성공" 메시지
+      const res = await axios.post<RegisterResponse>(
+        `${API_BASE}/auth/register`,
+        { nickname, email, password }
+      );
+
+      alert(res.data.message); // 백엔드 메시지 표시
       router.push("/login");
     } catch (err: unknown) {
-      const error = err as AxiosError<{ message: string }>;
-      const message =
-        error.response?.data?.message || "회원가입에 실패했습니다.";
-      alert(message);
+      const error = err as AxiosError<ErrorResponse>;
+      const msg = error.response?.data?.message || "회원가입에 실패했어.";
+      alert(msg);
       console.error("회원가입 에러:", error);
     } finally {
       setLoading(false);

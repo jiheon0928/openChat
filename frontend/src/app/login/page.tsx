@@ -2,13 +2,11 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 const Page = () => {
   const router = useRouter();
-
-  // 리라이트 설정에 따라 기본 경로만 사용
-  const API_BASE = "/api";
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
 
   const [formData, setFormData] = useState({
     email: "",
@@ -17,50 +15,40 @@ const Page = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const { email, password } = formData;
+
     if (!email || !password) {
-      alert("이메일과 비밀번호를 모두 입력해줘.");
+      alert("이메일과 비밀번호를 모두 입력해.");
       return;
     }
 
     try {
-      const res = await axios.post(`${API_BASE}/auth/login`, {
-        email,
-        password,
-      });
+      const res = await axios.post<{
+        status: string;
+        message: string;
+        token: string;
+      }>(`${API_BASE}/auth/login`, { email, password });
 
-      // 백엔드에서 { token, user } 형태로 반환한다고 가정
-      const { token, user } = res.data;
+      const { token } = res.data;
       if (!token) {
         alert("로그인 응답에 토큰이 없어.");
         console.error("응답 전체:", res.data);
         return;
       }
 
-      // 로컬스토리지에 토큰 저장
       localStorage.setItem("token", token);
       alert("로그인 성공!");
-      // 필요하면 전역 상태나 Context에 user 정보도 저장
-      // 예: setUser(user);
-
       router.push("/chat");
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        const msg = err.response?.data?.message || "로그인에 실패했어.";
-        alert(msg);
-      } else {
-        alert("알 수 없는 에러가 발생했어.");
-      }
-      console.error("로그인 에러:", err);
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "로그인에 실패했어.";
+      alert(msg);
+      console.error("로그인 에러:", error);
     }
   };
 
