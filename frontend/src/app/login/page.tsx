@@ -7,7 +7,8 @@ import axios from "axios";
 const Page = () => {
   const router = useRouter();
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL!; // `https://jiheonchat.duckdns.org`
+  // vercel.json 리라이트로 /api → EC2:3000/api 로 포워딩
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
   const [formData, setFormData] = useState({
     email: "",
@@ -26,40 +27,37 @@ const Page = () => {
     e.preventDefault();
 
     const { email, password } = formData;
-
     if (!email || !password) {
       alert("이메일과 비밀번호를 모두 입력해주세요.");
       return;
     }
 
     try {
-      const response = await axios.post(
-        `${API_URL}/auth/login`,
-        { email, password },
-        { withCredentials: true }
-      );
+      // /api/auth/login 로만 호출
+      const res = await axios.post(`${API_BASE}/auth/login`, {
+        email,
+        password,
+      });
 
-      const user = response.data.data.data;
-      const nickname = user.nickname;
-      const id = user.id;
-
-      if (!nickname || !id) {
-        alert("로그인 응답에 문제가 있습니다.");
-        console.error("로그인 응답:", response.data);
+      // 로그인 성공 시 { accessToken } 반환 가정
+      const { accessToken } = res.data;
+      if (!accessToken) {
+        alert("로그인 응답에 토큰이 없습니다.");
+        console.error("응답 전체:", res.data);
         return;
       }
 
-      localStorage.setItem("nickname", nickname);
-      localStorage.setItem("userId", id.toString());
-      console.log("로그인 응답:", response.data);
-      alert("로그인에 성공했습니다!");
+      // 토큰만 localStorage에 저장
+      localStorage.setItem("accessToken", accessToken);
+
+      alert("로그인 성공!");
       router.push("/chat");
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        const message = err.response?.data?.message || "로그인에 실패했습니다.";
-        alert(message);
+        const msg = err.response?.data?.message || "로그인에 실패했습니다.";
+        alert(msg);
       } else {
-        alert("알 수 없는 에러가 발생했습니다.");
+        alert("알 수 없는 에러가 발생했어요.");
       }
       console.error("로그인 에러:", err);
     }
