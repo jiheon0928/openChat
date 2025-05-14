@@ -4,18 +4,14 @@ import { io, Socket } from "socket.io-client";
 
 interface ServerToClientEvents {
   message: (msg: string) => void;
-  receiveMessage: (message: {
-    id: number;
-    senderId: number;
-    nickname: string;
-    content: string;
-    createdAt: string;
-  }) => void;
   // 필요한 서버 이벤트 타입 추가
 }
 
 interface ClientToServerEvents {
-  sendMessage: (msg: string) => void;
+  sendMessage: (
+    data: { userId: number; nickname: string; content: string },
+    callback: (response: { success: boolean; message?: string }) => void
+  ) => void;
   // 필요한 클라이언트 이벤트 타입 추가
 }
 
@@ -59,8 +55,11 @@ socket.on("message", (msg) => {
 /**
  * 메시지 보내는 헬퍼
  */
-export function sendMessage(msg: string) {
-  socket.emit("sendMessage", msg);
+export function sendMessage(
+  data: { userId: number; nickname: string; content: string },
+  callback: (response: { success: boolean; message?: string }) => void
+) {
+  socket.emit("sendMessage", data, callback);
 }
 
 export default socket;
