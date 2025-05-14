@@ -6,7 +6,7 @@ import axios, { AxiosError } from "axios";
 
 const Page = () => {
   const router = useRouter();
-  const API_BASE = "/api";
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL!; // Vercel 환경변수에 설정해두세요
 
   const [formData, setFormData] = useState({
     nickname: "",
@@ -14,6 +14,7 @@ const Page = () => {
     password: "",
     confirmPassword: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -25,27 +26,25 @@ const Page = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const { nickname, email, password, confirmPassword } = formData;
 
     if (!nickname || !email || !password || !confirmPassword) {
       alert("모든 필드를 입력해주세요.");
       return;
     }
-
     if (password !== confirmPassword) {
       alert("비밀번호가 일치하지 않습니다.");
       return;
     }
 
     try {
-      await axios.post(`${API_BASE}/auth/register`, {
-        nickname,
-        email,
-        password,
-      });
-
-      alert("회원가입이 완료되었습니다!");
+      setLoading(true);
+      const res = await axios.post<{
+        status: string;
+        message: string;
+        data: any;
+      }>(`${API_BASE}/auth/register`, { nickname, email, password });
+      alert(res.data.message); // 백엔드에서 보내준 "등록 성공" 메시지
       router.push("/login");
     } catch (err: unknown) {
       const error = err as AxiosError<{ message: string }>;
@@ -53,6 +52,8 @@ const Page = () => {
         error.response?.data?.message || "회원가입에 실패했습니다.";
       alert(message);
       console.error("회원가입 에러:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -94,9 +95,12 @@ const Page = () => {
         />
         <button
           type="submit"
-          className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600"
+          disabled={loading}
+          className={`w-full py-2 rounded text-white ${
+            loading ? "bg-gray-300" : "bg-gray-500 hover:bg-gray-600"
+          }`}
         >
-          회원가입
+          {loading ? "가입 중..." : "회원가입"}
         </button>
       </form>
     </div>

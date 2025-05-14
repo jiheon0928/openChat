@@ -31,13 +31,15 @@ export class AuthService {
 
     // 3) JWT 토큰 생성
     const payload = { sub: user.id, email: user.email };
-    const accessToken = this.jwtService.sign(payload);
+    const token = this.jwtService.sign(payload);
 
-    // 4) 결과 반환
+    // 4) 결과 반환: token 필드에만 JWT 담기
     return {
-      accessToken,
-      nickname: user.nickname,
-      id: user.id,
+      token,
+      user: {
+        id: user.id,
+        nickname: user.nickname,
+      },
     };
   }
 }

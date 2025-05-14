@@ -28,7 +28,7 @@ const Page = () => {
 
     const { email, password } = formData;
     if (!email || !password) {
-      alert("이메일과 비밀번호를 모두 입력해주세요.");
+      alert("이메일과 비밀번호를 모두 입력해줘.");
       return;
     }
 
@@ -38,22 +38,27 @@ const Page = () => {
         password,
       });
 
-      const { accessToken } = res.data;
-      if (!accessToken) {
-        alert("로그인 응답에 토큰이 없습니다.");
+      // 백엔드에서 { token, user } 형태로 반환한다고 가정
+      const { token, user } = res.data;
+      if (!token) {
+        alert("로그인 응답에 토큰이 없어.");
         console.error("응답 전체:", res.data);
         return;
       }
 
-      localStorage.setItem("accessToken", accessToken);
+      // 로컬스토리지에 토큰 저장
+      localStorage.setItem("token", token);
       alert("로그인 성공!");
+      // 필요하면 전역 상태나 Context에 user 정보도 저장
+      // 예: setUser(user);
+
       router.push("/chat");
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        const msg = err.response?.data?.message || "로그인에 실패했습니다.";
+        const msg = err.response?.data?.message || "로그인에 실패했어.";
         alert(msg);
       } else {
-        alert("알 수 없는 에러가 발생했어요.");
+        alert("알 수 없는 에러가 발생했어.");
       }
       console.error("로그인 에러:", err);
     }

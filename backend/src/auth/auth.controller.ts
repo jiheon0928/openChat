@@ -1,6 +1,6 @@
 // src/auth/auth.controller.ts
 
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserService } from '../user/user.service';
 
@@ -29,15 +29,25 @@ export class AuthController {
       password,
       nickname,
     );
-    return { message: '등록 성공', data: newUser };
+    return {
+      status: 'ok',
+      message: '등록 성공',
+      data: newUser,
+    };
   }
 
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   async login(
     @Body('email') email: string,
     @Body('password') password: string,
   ) {
-    const result = await this.authService.login(email, password);
-    return { message: '로그인 성공', data: result };
+    // 로그인 검증과 JWT 발급
+    const token = await this.authService.login(email, password);
+    return {
+      status: 'ok',
+      message: '로그인 성공',
+      token, // 응답 바디에 JWT 토큰 포함
+    };
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import socket from "../socket";
+import { io, Socket } from "socket.io-client";
 import axios from "axios";
 
 interface ChatMessage {
@@ -17,55 +17,52 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
+  // <-- 여기서 초기값 null 지정
+  const socketRef = useRef<Socket | null>(null);
+
   useEffect(() => {
-    // 1) 기존 메시지 불러오기
-    const fetchMessages = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        const { data } = await axios.get<{ data: ChatMessage[] }>(
-          `/api/chat/messages`,
-          {
-            headers: {
-              Authorization: token ? `Bearer ${token}` : "",
-            },
-          }
-        );
-        if (Array.isArray(data.data)) {
-          setMessages(data.data);
-        } else {
-          console.error("서버 응답 형식이 올바르지 않습니다.", data);
-        }
-      } catch (error) {
-        console.error("메시지 불러오기 실패:", error);
-      }
-    };
-
-    fetchMessages();
-
-    // 2) 소켓 연결
-    if (!socket.connected) {
-      socket.connect();
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
+    const nickname = localStorage.getItem("nickname");
+    if (!token || !userId || !nickname) {
+      alert("로그인이 필요해.");
+      return;
     }
 
-    // 3) 소켓 이벤트 등록
-    const handleReceiveMessage = (newMessage: ChatMessage) => {
-      setMessages((prev) => [...prev, newMessage]);
-    };
+    // 메시지 fetch
+    (async () => {
+      try {
+        const res = await axios.get<{ data: ChatMessage[] }>(
+          `${process.env.NEXT_PUBLIC_API_URL}/chat/messages`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (Array.isArray(res.data.data)) setMessages(res.data.data);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
 
-    socket.on("receiveMessage", handleReceiveMessage);
-    socket.on("connect", () => console.log("소켓 연결됨"));
-    socket.on("disconnect", () => console.log("소켓 연결 끊김"));
-    socket.on("connect_error", (err) => console.error("소켓 연결 에러:", err));
+    // socket 연결
+    const socket = io(process.env.NEXT_PUBLIC_WS_URL!, {
+      auth: { token },
+      transports: ["websocket"],
+    });
+    socketRef.current = socket;
+
+    socket.on("receiveMessage", (newMessage: ChatMessage) => {
+      setMessages((prev) => [...prev, newMessage]);
+    });
+    socket.on("connect", () => console.log("socket connected"));
+    socket.on("disconnect", () => console.log("socket disconnected"));
+    socket.on("connect_error", (err) => console.error(err));
 
     return () => {
-      socket.off("receiveMessage", handleReceiveMessage);
-      socket.off("connect");
-      socket.off("disconnect");
-      socket.off("connect_error");
+      socket.off("receiveMessage");
+      socket.disconnect();
     };
   }, []);
 
-  // 새로운 메시지 생기면 스크롤맨 아래로
+  // 새 메시지 오면 스크롤
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop =
@@ -74,26 +71,24 @@ export default function ChatPage() {
   }, [messages]);
 
   const handleSend = () => {
+    const token = localStorage.getItem("token");
     const userId = localStorage.getItem("userId");
     const nickname = localStorage.getItem("nickname");
-    if (!userId || !nickname) {
-      alert("로그인이 필요합니다.");
+    if (!token || !userId || !nickname) {
+      alert("로그인이 필요해.");
       return;
     }
     if (!input.trim()) {
-      alert("메시지를 입력해주세요.");
+      alert("메시지 입력해.");
       return;
     }
 
-    socket.emit(
+    // null 체크!
+    socketRef.current?.emit(
       "sendMessage",
-      {
-        userId: Number(userId),
-        nickname,
-        content: input,
-      },
-      (response: { success: boolean; message?: string }) => {
-        console.log("메시지 전송 응답:", response);
+      { userId: Number(userId), nickname, content: input },
+      (res: { success: boolean; message?: string }) => {
+        if (!res.success) alert(res.message || "전송 실패");
       }
     );
 
@@ -107,25 +102,22 @@ export default function ChatPage() {
         className="flex flex-col gap-2 mb-4 max-h-[500px] overflow-y-auto border p-4 rounded"
       >
         {messages.map((msg) => {
-          const myUserId = Number(localStorage.getItem("userId"));
-          const isMyMessage = msg.senderId === myUserId;
-
+          const myId = Number(localStorage.getItem("userId"));
+          const isMe = msg.senderId === myId;
           return (
             <div
               key={`${msg.id}-${msg.createdAt}`}
-              className={`flex ${
-                isMyMessage ? "justify-end" : "justify-start"
-              }`}
+              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
             >
               <div
                 className={`p-2 rounded-lg max-w-xs break-words ${
-                  isMyMessage
+                  isMe
                     ? "bg-black text-white rounded-br-none"
                     : "bg-gray-300 text-black rounded-bl-none"
                 }`}
               >
                 <div className="text-sm font-semibold mb-1">
-                  {isMyMessage ? "나" : msg.nickname}
+                  {isMe ? "나" : msg.nickname}
                 </div>
                 <div>{msg.content}</div>
                 <div className="text-xs text-right mt-1">
