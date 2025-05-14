@@ -1,3 +1,5 @@
+// src/app/socket/index.ts
+
 import { io, Socket } from "socket.io-client";
 
 interface ServerToClientEvents {
@@ -35,12 +37,11 @@ if (typeof window !== "undefined") {
   });
 }
 
-// 안전하게 빈 소켓 구현
-const safeSocket: any = socket || {
-  on: () => {},
-  emit: () => {},
-  id: "",
-};
+// 서버사이드 렌더링 시 빈 객체로 대체
+const safeSocket = (socket ?? {}) as Socket<
+  ServerToClientEvents,
+  ClientToServerEvents
+>;
 
 export function sendMessage(
   data: { userId: number; nickname: string; content: string },
@@ -49,4 +50,4 @@ export function sendMessage(
   safeSocket.emit("sendMessage", data, callback);
 }
 
-export default safeSocket as Socket<ServerToClientEvents, ClientToServerEvents>;
+export default safeSocket;
