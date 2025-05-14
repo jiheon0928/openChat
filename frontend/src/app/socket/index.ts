@@ -20,13 +20,11 @@ interface ClientToServerEvents {
   ) => void;
 }
 
-// Socket.io 연결 (Vercel 리라이트 기반)
-const token =
-  typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+let socket: Socket<ServerToClientEvents, ClientToServerEvents>;
 
-const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
-  window.location.origin,
-  {
+if (typeof window !== "undefined") {
+  const token = localStorage.getItem("accessToken");
+  socket = io(window.location.origin, {
     path: "/api/socket.io",
     auth: { token },
     transports: ["websocket"],
@@ -36,8 +34,10 @@ const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     timeout: 20000,
-  }
-);
+  });
+} else {
+  socket = {} as any;
+}
 
 socket.on("connect", () => {
   console.log("[Socket] connected, id=", socket.id);
