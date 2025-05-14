@@ -6,7 +6,7 @@ import axios, { AxiosError } from "axios";
 
 const Page = () => {
   const router = useRouter();
-  const API_URL = process.env.NEXT_PUBLIC_API_URL!; // https://jiheonchat.duckdns.org
+  const API_BASE = "/api";
 
   const [formData, setFormData] = useState({
     nickname: "",
@@ -39,11 +39,11 @@ const Page = () => {
     }
 
     try {
-      await axios.post(
-        `${API_URL}/auth/register`,
-        { nickname, email, password },
-        { withCredentials: true }
-      );
+      await axios.post(`${API_BASE}/auth/register`, {
+        nickname,
+        email,
+        password,
+      });
 
       alert("회원가입이 완료되었습니다!");
       router.push("/login");

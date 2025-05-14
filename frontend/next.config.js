@@ -1,4 +1,3 @@
-// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -7,25 +6,12 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: "/api/auth/:path*",
-        destination: "http://34.225.172.232:3000/auth/:path*",
+        source: "/api/:path*",
+        destination: "http://34.225.172.232:3000/:path*",
       },
       {
-        source: "/api/chat/:path*",
-        destination: "http://34.225.172.232:3000/chat/:path*",
-      },
-    ];
-  },
-  async headers() {
-    return [
-      {
-        source: "/:path*",
-        headers: [
-          {
-            key: "Access-Control-Allow-Origin",
-            value: "*",
-          },
-        ],
+        source: "/api/socket.io/:path*",
+        destination: "http://34.225.172.232:3000/socket.io/:path*",
       },
     ];
   },

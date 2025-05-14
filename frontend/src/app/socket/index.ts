@@ -20,23 +20,24 @@ interface ClientToServerEvents {
   ) => void;
 }
 
-// env가 없으면 로컬 테스트용 ws://localhost:3000 사용
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:3000";
-
+// Socket.io 연결 (Vercel 리라이트 기반)
 const token =
   typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
-const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(WS_URL!, {
-  auth: { token },
-  transports: ["websocket"],
-  withCredentials: false,
-  path: "/socket.io",
-  reconnection: true,
-  reconnectionAttempts: Infinity,
-  reconnectionDelay: 1000,
-  reconnectionDelayMax: 5000,
-  timeout: 20000,
-});
+const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
+  window.location.origin,
+  {
+    path: "/api/socket.io",
+    auth: { token },
+    transports: ["websocket"],
+    withCredentials: false,
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000,
+  }
+);
 
 socket.on("connect", () => {
   console.log("[Socket] connected, id=", socket.id);

@@ -7,8 +7,8 @@ import axios from "axios";
 const Page = () => {
   const router = useRouter();
 
-  // vercel.json 리라이트로 /api → EC2:3000/api 로 포워딩
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
+  // 리라이트 설정에 따라 기본 경로만 사용
+  const API_BASE = "/api";
 
   const [formData, setFormData] = useState({
     email: "",
@@ -33,13 +33,11 @@ const Page = () => {
     }
 
     try {
-      // /api/auth/login 로만 호출
       const res = await axios.post(`${API_BASE}/auth/login`, {
         email,
         password,
       });
 
-      // 로그인 성공 시 { accessToken } 반환 가정
       const { accessToken } = res.data;
       if (!accessToken) {
         alert("로그인 응답에 토큰이 없습니다.");
@@ -47,9 +45,7 @@ const Page = () => {
         return;
       }
 
-      // 토큰만 localStorage에 저장
       localStorage.setItem("accessToken", accessToken);
-
       alert("로그인 성공!");
       router.push("/chat");
     } catch (err: unknown) {

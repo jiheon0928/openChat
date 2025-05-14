@@ -17,15 +17,18 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL!; // https://jiheonchat.duckdns.org
-
   useEffect(() => {
     // 1) 기존 메시지 불러오기
     const fetchMessages = async () => {
       try {
+        const token = localStorage.getItem("accessToken");
         const { data } = await axios.get<{ data: ChatMessage[] }>(
-          `${API_URL}/chat/messages`,
-          { withCredentials: true }
+          `/api/chat/messages`,
+          {
+            headers: {
+              Authorization: token ? `Bearer ${token}` : "",
+            },
+          }
         );
         if (Array.isArray(data.data)) {
           setMessages(data.data);
@@ -60,7 +63,7 @@ export default function ChatPage() {
       socket.off("disconnect");
       socket.off("connect_error");
     };
-  }, [API_URL]);
+  }, []);
 
   // 새로운 메시지 생기면 스크롤맨 아래로
   useEffect(() => {
