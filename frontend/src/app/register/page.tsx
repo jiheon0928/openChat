@@ -16,7 +16,7 @@ interface ErrorResponse {
 
 const Page = () => {
   const router = useRouter();
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
   const [formData, setFormData] = useState({
     nickname: "",
