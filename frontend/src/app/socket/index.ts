@@ -4,6 +4,13 @@ import { io, Socket } from "socket.io-client";
 
 interface ServerToClientEvents {
   message: (msg: string) => void;
+  receiveMessage: (message: {
+    id: number;
+    senderId: number;
+    nickname: string;
+    content: string;
+    createdAt: string;
+  }) => void;
   // 필요한 서버 이벤트 타입 추가
 }
 
