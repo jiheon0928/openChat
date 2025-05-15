@@ -1,5 +1,3 @@
-// src/main.ts
-
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -23,7 +21,7 @@ async function bootstrap() {
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
       'Content-Type',
-      'Authorization', // Authorization 헤더 허용
+      'Authorization',
       'X-Requested-With',
       'Accept',
     ],
@@ -41,16 +39,8 @@ async function bootstrap() {
   // 3) 응답 변환 인터셉터
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  // 4) Socket.IO 설정: credentials false
+  // 4) Socket.IO 어댑터 등록 (⚠️ 중복 서버 제거됨)
   const ioAdapter = new IoAdapter(app);
-  const server = app.getHttpServer() as any;
-  ioAdapter.createIOServer(server, {
-    cors: {
-      origin: origins,
-      methods: ['GET', 'POST'],
-      credentials: false,
-    },
-  });
   app.useWebSocketAdapter(ioAdapter);
 
   // 5) 서버 시작
