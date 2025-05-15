@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios, { AxiosError } from "axios";
 
-// axios 인스턴스: Vercel rewrites로 /api → EC2 백엔드로 프록시
+// ① REST API는 NEXT_PUBLIC_API_URL 환경변수를 사용하도록 변경
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: process.env.NEXT_PUBLIC_API_URL, // e.g. "https://34.225.172.232"
 });
 
 interface LoginResponse {
@@ -46,7 +46,7 @@ const Page = () => {
       });
       console.log("로그인 응답 전체:", res.data);
 
-      // 실제 토큰과 유저 정보 꺼내기
+      // ② 실제 토큰과 유저 정보 꺼내기
       const jwt = res.data.data.token.token;
       const { id, nickname } = res.data.data.token.user;
 
@@ -55,7 +55,7 @@ const Page = () => {
         return;
       }
 
-      // 로컬스토리지에 저장
+      // ③ 로컬스토리지에 저장
       localStorage.setItem("token", jwt);
       localStorage.setItem("userId", String(id));
       localStorage.setItem("nickname", nickname);

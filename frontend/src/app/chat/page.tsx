@@ -27,11 +27,14 @@ export default function ChatPage() {
       return;
     }
 
-    // 1) 기존 메시지 불러오기 (Vercel rewrite로 /api/chat/messages → EC2)
+    // 1) 기존 메시지 불러오기
     axios
-      .get<{ data: ChatMessage[] }>("/api/chat/messages", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get<{ data: ChatMessage[] }>(
+        `${process.env.NEXT_PUBLIC_API_URL}/chat/messages`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
       .then((res) => {
         if (Array.isArray(res.data.data)) {
           setMessages(res.data.data);
@@ -39,9 +42,9 @@ export default function ChatPage() {
       })
       .catch(console.error);
 
-    // 2) 소켓 연결 (경로는 rewrite된 /api/socket.io)
-    const socket = io("/", {
-      path: "/api/socket.io",
+    // 2) 소켓 연결
+    const socket = io(process.env.NEXT_PUBLIC_WS_URL!, {
+      path: "/socket.io",
       transports: ["websocket"],
       auth: { token },
     });

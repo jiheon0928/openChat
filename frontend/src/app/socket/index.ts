@@ -1,5 +1,3 @@
-// src/app/socket/index.ts
-
 import { io, Socket } from "socket.io-client";
 
 interface ServerToClientEvents {
@@ -23,12 +21,11 @@ interface ClientToServerEvents {
 let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 
 if (typeof window !== "undefined") {
-  const token = localStorage.getItem("token"); // accessToken → token
-  socket = io("/", {
-    // window.location.origin 대신 "/"
-    path: "/api/socket.io",
-    auth: { token },
+  const token = localStorage.getItem("token");
+  socket = io(process.env.NEXT_PUBLIC_WS_URL!, {
+    path: "/socket.io", // Nginx 설정에 맞춘 WS 경로
     transports: ["websocket"],
+    auth: { token },
     reconnection: true,
     reconnectionAttempts: Infinity,
     reconnectionDelay: 1000,
@@ -37,7 +34,7 @@ if (typeof window !== "undefined") {
   });
 }
 
-// 서버 사이드 렌더링 시에도 타입 안정성 유지
+// SSR 시에도 타입 안전을 위해 빈 객체 캐스팅
 const safeSocket = (socket ?? {}) as Socket<
   ServerToClientEvents,
   ClientToServerEvents

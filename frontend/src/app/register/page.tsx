@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios, { AxiosError } from "axios";
 
-// axios 인스턴스: Vercel rewrite를 통해 /api → EC2 백엔드로 프록시됩니다.
+// ① REST API는 `/api` rewrite 대신 환경변수로 직접 백엔드에 연결합니다.
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: process.env.NEXT_PUBLIC_API_URL, // e.g. "https://34.225.172.232"
 });
 
 interface RegisterResponse {
