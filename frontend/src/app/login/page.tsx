@@ -97,6 +97,12 @@ const Page = () => {
           로그인
         </button>
       </form>
+      <div className="text-sm text-center mt-4">
+        테스트 계정: 이메일test@example.com, 비밀번호 : a123456
+      </div>
+      <div className="text-sm text-center mt-4">
+        테스트 계정: 이메일test1@example.com, 비밀번호 : a123456
+      </div>
     </div>
   );
 };
